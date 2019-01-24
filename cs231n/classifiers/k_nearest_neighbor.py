@@ -1,5 +1,5 @@
 import numpy as np
-
+from collections import Counter
 class KNearestNeighbor(object):
   """ a kNN classifier with L2 distance """
 
@@ -71,7 +71,7 @@ class KNearestNeighbor(object):
         # training point, and store the result in dists[i, j]. You should   #
         # not use a loop over dimension.                                    #
         #####################################################################
-        dists[i][j] += np.linalg.norm(self.X_train[j] - X[i])
+        dists[i, j] = np.sqrt(np.sum((X[i, :] - self.X_train[j, :]) ** 2))
         #####################################################################
         #                       END OF YOUR CODE                            #
         #####################################################################
@@ -160,8 +160,8 @@ class KNearestNeighbor(object):
       # Store this label in y_pred[i]. Break ties by choosing the smaller     #
       # label.                                                                #
       #########################################################################
-      unique, counts = np.unique(closest_y, return_counts=True)
-      print(unique, counts)
+      z = Counter(closest_y)
+      return z.most_common(1)[0][0]
       #########################################################################
       #                           END OF YOUR CODE                            # 
       #########################################################################
