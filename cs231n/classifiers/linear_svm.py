@@ -80,6 +80,7 @@ def svm_loss_vectorized(W, X, y, reg):
   scores -= np.expand_dims(correct_scores, axis=1) - 1 #y - y_correct + 1
   scores[np.arange(len(scores)), y] = 0 # Set loss from correct class to 1
   scores[scores < 0] = 0 # max(0, ..) set everything below zero to 0
+  print(scores[scores > 0].shape)
   loss = np.sum(scores) / len(scores)
   loss += reg * np.sum(W*W)
   #############################################################################
