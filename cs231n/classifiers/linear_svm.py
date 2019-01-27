@@ -36,7 +36,7 @@ def svm_loss_naive(W, X, y, reg):
       margin = scores[j] - correct_class_score + 1 # note delta = 1
       if margin > 0:
         loss += margin
-        dW[:, j] += X[i, :]
+        dW[:, j] += X[i]
         count_bad_classes += 1
     dW[:, y[i]] += -1 * count_bad_classes * X[i]
 
@@ -80,7 +80,6 @@ def svm_loss_vectorized(W, X, y, reg):
   scores -= np.expand_dims(correct_scores, axis=1) - 1 #y - y_correct + 1
   scores[np.arange(len(scores)), y] = 0 # Set loss from correct class to 1
   scores[scores < 0] = 0 # max(0, ..) set everything below zero to 0
-  print(scores[scores > 0].shape)
   loss = np.sum(scores) / len(scores)
   loss += reg * np.sum(W*W)
   #############################################################################
@@ -97,7 +96,12 @@ def svm_loss_vectorized(W, X, y, reg):
   # to reuse some of the intermediate values that you used to compute the     #
   # loss.                                                                     #
   #############################################################################
-  pass
+  mask = np.zeros(scores.shape)
+  mask[scores > 0] = 1
+  mask[np.arange(len(mask)), y] = -1 * np.sum(mask, axis=1)
+  dW = X.T.dot(mask)
+  dW /= len(scores)
+  dW += 2 * reg * W
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
