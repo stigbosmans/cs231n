@@ -41,9 +41,12 @@ def softmax_loss_naive(W, X, y, reg):
     p_i = e_i / e_sum #softmax
     loss += -np.log(p_i)
 
-    #dsoft[i, y[i]] = -1/p_i * (1/e_sum * e_i + e_i**2 * -1/(e_sum**2))
-    dsoft[i, y[i]] = p_i - 1 #pi - yi
-
+    dsoft[i, y[i]] = -1/p_i * (1/e_sum * e_i + e_i**2 * -1/(e_sum**2))
+    #dsoft[i, y[i]] = p_i - 1 #pi - yi
+    for c in range(C):
+      if c != y[i]:
+        e_c = np.exp(scores[i, c])
+        dsoft[i, c] = (e_i * (-1/(e_sum**2)) * e_c) * - 1/(e_i/e_sum)
   loss /= N
   loss += reg * np.sum(W*W)
 
@@ -66,6 +69,13 @@ def softmax_loss_vectorized(W, X, y, reg):
   # Initialize the loss and gradient to zero.
   loss = 0.0
   dW = np.zeros_like(W)
+  N = X.shape[0]
+  scores = X.dot(W)
+  e_sum = np.sum(np.exp(scores), axis=1) # N, 1
+  e_i = np.exp(scores[range(N), y])
+  p_i = e_i / e_sum
+  loss = np.sum(np.log(p_i)*-1)
+
 
   #############################################################################
   # TODO: Compute the softmax loss and its gradient using no explicit loops.  #
@@ -73,7 +83,19 @@ def softmax_loss_vectorized(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  e_i = e_i.reshape((N, 1))
+  e_sum = e_sum.reshape((N, 1))
+  e_c = np.exp(scores[range(N)])
+  p_i = e_i / e_sum
+  dscores = (e_i * (-1 / (e_sum ** 2)) * e_c) * - 1 / (e_i / e_sum)
+  dscores[range(N), y] = (-1 / p_i * (1 / e_sum * e_i + e_i ** 2 * -1 / (e_sum ** 2))).reshape((N,))
+
+  loss += reg * np.sum(W * W)
+  loss /= N
+
+  dscores /= N
+  dW = X.T.dot(dscores)
+  dW += 2 * reg * W
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
