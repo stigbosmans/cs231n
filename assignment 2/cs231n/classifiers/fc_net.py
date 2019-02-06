@@ -255,7 +255,11 @@ class FullyConnectedNet(object):
                 scores, zcache = affine_forward(out, W, b)
             else:
                 out, zcache = affine_relu_forward(out, W, b)
+                if self.use_dropout:
+                    out, dcache = dropout_forward(out, self.dropout_param)
+                    cache['dropout' + l] = dcache
             cache['z' + l] = zcache
+
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -287,6 +291,8 @@ class FullyConnectedNet(object):
                 dx, dw, db = affine_backward(dout, cache['z' + l])
                 dout = dx
             else:
+                if self.use_dropout:
+                    dout = dropout_backward(dout, cache['dropout' + l])
                 dx, dw, db = affine_relu_backward(dout, cache['z' + l])
                 dout = dx
             grads['W' + l] = dw + self.reg * self.params['W' + l]
