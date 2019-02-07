@@ -271,11 +271,11 @@ def batchnorm_backward(dout, cache):
     ddivvarsq = np.sum(dxhat * xminmean, axis=0)
     dvarsq = ddivvarsq * -1 * varsq**-2
     dvar = dvarsq * 1/2 * ((var + eps) ** (-1/2))
-    dxminmean2 = ((dvar * 1/N) * np.ones(dout.shape)) * 2 * xminmean
+    dxminmean2 = ((dvar * 1/N)) * 2 * xminmean
     dxminmean = dxminmean1 + dxminmean2
     dx1 = dxminmean
-    dx2 = (np.sum(dxminmean, axis=0) * 1/N) * np.ones(dout.shape)
-    dx = dx1 - np.sum(dx1, axis=0) / N
+    dx2 = (np.sum(dxminmean, axis=0) * 1/N)
+    dx = dx1 - dx2
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
