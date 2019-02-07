@@ -188,7 +188,7 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         mean = 1/N * np.sum(x, axis=0)
         xminmean = x - mean
         var = 1/N * np.sum(xminmean**2, axis=0)
-        varsq = (var + eps) ** 1/2
+        varsq = np.sqrt(var + eps)
         divvarsq = varsq ** -1
         xhat = xminmean * divvarsq
         out = gamma * xhat + beta
@@ -275,7 +275,7 @@ def batchnorm_backward(dout, cache):
     dxminmean = dxminmean1 + dxminmean2
     dx1 = dxminmean
     dx2 = (np.sum(dxminmean, axis=0) * 1/N) * np.ones(dout.shape)
-    dx = dx1 + dx2
+    dx = dx1 - np.sum(dx1, axis=0) / N
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
