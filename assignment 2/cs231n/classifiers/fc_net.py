@@ -184,9 +184,9 @@ class FullyConnectedNet(object):
             self.params['W' + l] = np.random.randn(*(last_layer_size, D)) * weight_scale
             self.params['b' + l] = np.zeros(D)
             last_layer_size = D
-            if self.normalization == 'batchnorm':
-                self.params['gamma' + l] = 1
-                self.params['beta' + l] = 0
+            if self.normalization == 'batchnorm' and c + 1 != self.num_layers - 1:
+                self.params['gamma' + l] = np.ones((D,))
+                self.params['beta' + l] = np.zeros((D,))
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -254,7 +254,16 @@ class FullyConnectedNet(object):
             if c == self.num_layers - 1:
                 scores, zcache = affine_forward(out, W, b)
             else:
-                out, zcache = affine_relu_forward(out, W, b)
+                #Affine forward
+                out, fc_cache = affine_forward(out, W, b)
+                #Batchnorm
+                if self.normalization == 'batchnorm':
+                    out, bn_cache = batchnorm_forward(out, self.params['gamma' + l], self.params['beta' + l], self.bn_params[c])
+                    cache['bn_cache' + l] = bn_cache
+                #Relu
+                out, relu_cache = relu_forward(out)
+                zcache = (fc_cache, relu_cache)
+                #Dropout
                 if self.use_dropout:
                     out, dcache = dropout_forward(out, self.dropout_param)
                     cache['dropout' + l] = dcache
@@ -291,12 +300,21 @@ class FullyConnectedNet(object):
                 dx, dw, db = affine_backward(dout, cache['z' + l])
                 dout = dx
             else:
+                fc_cache, relu_cache = cache['z' + l]
                 if self.use_dropout:
                     dout = dropout_backward(dout, cache['dropout' + l])
-                dx, dw, db = affine_relu_backward(dout, cache['z' + l])
+
+                dout = relu_backward(dout, relu_cache)
+
+                if self.normalization == 'batchnorm':
+                    dout, dgamma, dbeta = batchnorm_backward(dout, cache['bn_cache' + l])
+                    grads['gamma' + l] = dgamma
+                    grads['beta' + l] = dbeta
+                dx, dw, db = affine_backward(dout, fc_cache)
                 dout = dx
             grads['W' + l] = dw + self.reg * self.params['W' + l]
             grads['b' + l] = db
+
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
