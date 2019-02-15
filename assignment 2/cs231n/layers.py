@@ -592,7 +592,17 @@ def max_pool_forward_naive(x, pool_param):
     ###########################################################################
     # TODO: Implement the max-pooling forward pass                            #
     ###########################################################################
-    pass
+    N, C, H, W = x.shape
+    pool_height, pool_width, stride = pool_param['pool_height'], pool_param['pool_width'], pool_param['stride']
+    H2 = int(1 + (H - pool_height) / stride)
+    W2 = int(1 + (W - pool_width) / stride)
+    out = np.zeros((N, C, H2, W2))
+    for n in range(N):
+        for c in range(C):
+            for hh in range(H2):
+                for ww in range(W2):
+                    out[n, c, hh, ww] = np.max(x[n, c, hh * stride:hh * stride + pool_height, ww * stride: ww * stride + pool_width])
+
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -611,11 +621,23 @@ def max_pool_backward_naive(dout, cache):
     Returns:
     - dx: Gradient with respect to x
     """
-    dx = None
+    x, pool_param = cache
+    N, C, H, W = x.shape
+    pool_height, pool_width, stride = pool_param['pool_height'], pool_param['pool_width'], pool_param['stride']
+    H2 = int(1 + (H - pool_height) / stride)
+    W2 = int(1 + (W - pool_width) / stride)
+    dx = np.zeros(x.shape)
     ###########################################################################
     # TODO: Implement the max-pooling backward pass                           #
     ###########################################################################
-    pass
+    for n in range(N):
+        for c in range(C):
+            for hh in range(H2):
+                for ww in range(W2):
+                    dsingle = dout[n, c, hh, ww]
+                    slice = x[n, c, hh * stride: hh * stride + pool_height, ww * stride: ww * stride + pool_width]
+                    filter = slice == np.max(slice) #Use filter to propagate dout only to the max value
+                    dx[n, c, hh * stride: hh * stride + pool_height, ww * stride: ww * stride + pool_width] += filter * dsingle
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
