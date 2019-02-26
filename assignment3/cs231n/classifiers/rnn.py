@@ -35,7 +35,7 @@ class CaptioningRNN(object):
         """
         if cell_type not in {'rnn', 'lstm'}:
             raise ValueError('Invalid cell_type "%s"' % cell_type)
-
+        self.H = hidden_dim
         self.cell_type = cell_type
         self.dtype = dtype
         self.word_to_idx = word_to_idx
@@ -140,7 +140,33 @@ class CaptioningRNN(object):
         # Note also that you are allowed to make use of functions from layers.py   #
         # in your implementation, if needed.                                       #
         ############################################################################
-        pass
+        N, D = features.shape
+        _, T = captions.shape
+        H = self.H
+        cache = {}
+        h0, cache['h0'] = affine_forward(features, W_proj, b_proj)
+        embedding, cache['embedding'] = word_embedding_forward(captions_in, W_embed)
+        h, cache['h'] = rnn_forward(embedding, h0, Wx, Wh, b)
+        out, cache['out'] = temporal_affine_forward(h, W_vocab, b_vocab)
+        #mask = out != self._null
+        loss, dout = temporal_softmax_loss(out, captions_out, mask)
+
+        dh, dW_vocab, db_vocab= temporal_affine_backward(dout, cache['out'])
+        dembedding, dh0, dWx, dWh, db = rnn_backward(dh, cache['h'])
+        dW_embed = word_embedding_backward(dembedding, cache['embedding'])
+        dfeatures, dW_proj, db_proj = affine_backward(dh0, cache['h0'])
+
+        grads['W_proj'] = dW_proj
+        grads['b_proj'] = db_proj
+        grads['W_embed'] = dW_embed
+        #grads['h0'] = dh0
+        grads['Wx'] = dWx
+        grads['Wh'] = dWh
+        grads['b'] = db
+        #grads['h'] = dh
+        grads['W_vocab'] = dW_vocab
+        grads['b_vocab'] = db_vocab
+        #grads['dout'] = dout
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
