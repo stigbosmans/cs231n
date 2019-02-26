@@ -220,7 +220,7 @@ def word_embedding_backward(dout, cache):
     # Note that words can appear more than once in a sequence.                   #
     # HINT: Look up the function np.add.at                                       #
     ##############################################################################
-    np.add.at
+    np.add.at(dW, x[:,:], dout)
     ##############################################################################
     #                               END OF YOUR CODE                             #
     ##############################################################################
